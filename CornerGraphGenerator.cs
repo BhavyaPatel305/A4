@@ -33,11 +33,131 @@ namespace EasyAI.Navigation.Generators
                     open_corner = IsCorner(i, j);// true if corner
                     if (open_corner)
                     {
-                        NodeArea.AddNode(i, j);
+                        if (green_area_open(i,j))
+                        {
+                            place_node(i,j,cornerNodeSteps);
+                        }
+                        
                     }
                 }
             }
             
+        }
+
+        private void  place_node(int x, int z, int cornerNodeStep)
+        {
+            // So if empty space is at the diagonal left bottom of the corner #
+            if (!NodeArea.IsOpen(x - 1, z + 1))
+            {
+                NodeArea.AddNode(x+3, z-3);
+            }
+
+            // If empty space is at the diagonal right bottom of the corner #
+            if (!NodeArea.IsOpen(x - 1, z - 1))
+            {
+                NodeArea.AddNode(x + 3, z + 3);
+            }
+
+            // If empty space is at the diagonal left top of the corner #
+            if (!NodeArea.IsOpen(x + 1, z + 1))
+            {
+                NodeArea.AddNode(x - 3, z - 3);
+            }
+
+            // If empty space is at the diagonal right top of the corner #
+            if (!NodeArea.IsOpen(x + 1, z - 1))
+            {
+                NodeArea.AddNode(x - 3, z + 3);
+            }
+        }
+
+        private bool green_area_open(int x, int z)
+        {
+            // So if empty space is at the diagonal left bottom of the corner #
+            if (!NodeArea.IsOpen(x - 1, z + 1))
+            {
+                x = x - 1;
+                z = z - 3;
+                for (int i = x; i <= x + 4; i++)
+                {
+                    for (int j = z; j<z+4; j++)
+                    {
+                        if(i == x && j == (z + 4))
+                        {
+                            continue;
+                        }
+                        if (!NodeArea.IsOpen(i,j))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            // If empty space is at the diagonal right bottom of the corner #
+            if (!NodeArea.IsOpen(x - 1, z - 1))
+            {
+                x = x - 1;
+                z = z - 1;
+                for (int i = x; i <= x + 4; i++)
+                {
+                    for (int j = z; j < z + 4; j++)
+                    {
+                        if (i == x && j == z)
+                        {
+                            continue;
+                        }
+                        if (!NodeArea.IsOpen(i, j))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            // If empty space is at the diagonal left top of the corner #
+            if (!NodeArea.IsOpen(x + 1, z + 1))
+            {
+                x = x - 3;
+                z = z - 3;
+                for (int i = x; i <= x + 4; i++)
+                {
+                    for (int j = z; j < z + 4; j++)
+                    {
+                        if (i == (x+4) && j == (z+4))
+                        {
+                            continue;
+                        }
+                        if (!NodeArea.IsOpen(i, j))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            // If empty space is at the diagonal right top of the corner #
+            if (!NodeArea.IsOpen(x + 1, z - 1))
+            {
+                x = x - 3;
+                z = z - 1;
+                for (int i = x; i <= x + 4; i++)
+                {
+                    for (int j = z; j < z + 4; j++)
+                    {
+                        if (i == (x + 4) && j == z)
+                        {
+                            continue;
+                        }
+                        if (!NodeArea.IsOpen(i, j))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
         }
 
         private bool IsCorner(int x, int z)
@@ -54,30 +174,120 @@ namespace EasyAI.Navigation.Generators
                 return false;
             }
 
-            // Check if the current coordinate is surrounded by closed spaces on two sides.
+            // Check if the current coordinate is surrounded by closed spaces on 4 sides.
             int closedCount = 0;
 
-            // Check the left and right sides.
-            if (!NodeArea.IsOpen(x - 1, z))
+            
+            // Find the corner
+            // So if empty space is at the diagonal left bottom of the corner #
+            if (!NodeArea.IsOpen(x - 1, z + 1))
             {
-                closedCount++;
+                // check its top and right, if empty then place node
+                // top
+                if (NodeArea.IsOpen(x - 1, z))
+                {
+                    closedCount++;
+                }
+                // right
+                if (NodeArea.IsOpen(x, z + 1))
+                {
+                    closedCount++;
+                }
+                // left
+                if (NodeArea.IsOpen(x, z - 1))
+                {
+                    closedCount++;
+                }
+                // bottom
+                if (NodeArea.IsOpen(x + 1, z))
+                {
+                    closedCount++;
+                }
             }
-            if (!NodeArea.IsOpen(x + 1, z))
-            {
-                closedCount++;
-            }
+            
 
-            // Check the top and bottom sides.
-            if (!NodeArea.IsOpen(x, z - 1))
+            
+            // If empty space is at the diagonal right bottom of the corner #
+            if (!NodeArea.IsOpen(x - 1, z - 1))
             {
-                closedCount++;
+                // check its top and left, if empty then place node
+                // top
+                if (NodeArea.IsOpen(x - 1, z))
+                {
+                    closedCount++;
+                }
+                // right
+                if (NodeArea.IsOpen(x, z + 1))
+                {
+                    closedCount++;
+                }
+                // left
+                if (NodeArea.IsOpen(x, z - 1))
+                {
+                    closedCount++;
+                }
+                // bottom
+                if (NodeArea.IsOpen(x + 1, z))
+                {
+                    closedCount++;
+                }
             }
-            if (!NodeArea.IsOpen(x, z + 1))
-            {
-                closedCount++;
-            }
+            
 
-            return closedCount == 2;
+            
+            // If empty space is at the diagonal left top of the corner #
+            if (!NodeArea.IsOpen(x + 1, z + 1))
+            {
+                // top
+                if (NodeArea.IsOpen(x - 1, z))
+                {
+                    closedCount++;
+                }
+                // right
+                if (NodeArea.IsOpen(x, z + 1))
+                {
+                    closedCount++;
+                }
+                // left
+                if (NodeArea.IsOpen(x, z - 1))
+                {
+                    closedCount++;
+                }
+                // bottom
+                if (NodeArea.IsOpen(x + 1, z))
+                {
+                    closedCount++;
+                }
+            }
+            
+            
+            // If empty space is at the diagonal right top of the corner #
+            if (!NodeArea.IsOpen(x + 1, z - 1))
+            {
+                // top
+                if (NodeArea.IsOpen(x - 1, z))
+                {
+                    closedCount++;
+                }
+                // right
+                if (NodeArea.IsOpen(x, z + 1))
+                {
+                    closedCount++;
+                }
+                // left
+                if (NodeArea.IsOpen(x, z - 1))
+                {
+                    closedCount++;
+                }
+                // bottom
+                if (NodeArea.IsOpen(x + 1, z))
+                {
+                    closedCount++;
+                }
+            }
+            
+
+            return closedCount == 4;
         }
     }
 }
