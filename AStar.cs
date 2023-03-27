@@ -18,29 +18,31 @@ namespace EasyAI.Navigation
         /// <returns>The path of nodes to take to get from the starting position to the ending position.</returns>
         public static List<Vector3> Perform(Vector3 current, Vector3 goal, List<Connection> connections)
         {
-            /**
-            List<AStarNode> openList = new List<AStarNode>();
-            List<AStarNode> closedList = new List<AStarNode>();
+
+            // Create the start and end nodes
             AStarNode startNode = new AStarNode(current, goal);
             AStarNode endNode = new AStarNode(goal, goal);
-            openList.Add(startNode);
 
-            while (openList.Count > 0)
+            // Create the open and closed sets
+            List<AStarNode> openSet = new List<AStarNode> { startNode };
+            HashSet<AStarNode> closedSet = new HashSet<AStarNode>();
+
+            while (openSet.Count > 0)
             {
-                AStarNode currentNode = openList[0];
-                for (int i = 1; i < openList.Count; i++)
+                // Get the node with the lowest f cost
+                AStarNode currentNode = openSet[0];
+                for (int i = 1; i < openSet.Count; i++)
                 {
-                    if (openList[i].CostF < currentNode.CostF || openList[i].CostF == currentNode.CostF && openList[i].CostH < currentNode.CostH)
+                    if (openSet[i].CostF < currentNode.CostF)
                     {
-                        currentNode = openList[i];
+                        currentNode = openSet[i];
                     }
                 }
 
-                openList.Remove(currentNode);
-                closedList.Add(currentNode);
-
+                // Check if we've reached the goal
                 if (currentNode == endNode)
                 {
+                    // Reconstruct the path and return it
                     List<Vector3> path = new List<Vector3>();
                     AStarNode node = currentNode;
                     while (node != startNode)
@@ -52,31 +54,49 @@ namespace EasyAI.Navigation
                     return path;
                 }
 
+                // Move the current node from the open set to the closed set
+                openSet.Remove(currentNode);
+                closedSet.Add(currentNode);
+
+                // Check each neighbor of the current node
                 foreach (Connection connection in connections)
                 {
-                    if (connection.Start == currentNode.Position)
+                    // Check if the connection contains the current node
+                    if (connection.A == currentNode.Position || connection.B == currentNode.Position)
                     {
-                        AStarNode neighbour = new AStarNode(connection.End, goal, currentNode);
-                        if (closedList.Contains(neighbour))
+                        // Get the neighbor node
+                        Vector3 neighborPosition = connection.A == currentNode.Position ? connection.B : connection.A;
+                        AStarNode neighborNode = new AStarNode(neighborPosition, goal, currentNode);
+
+                        // Check if the neighbor node is already in the closed set
+                        if (closedSet.Contains(neighborNode))
                         {
                             continue;
                         }
 
-                        float newCostG = currentNode.CostG + Vector3.Distance(currentNode.Position, neighbour.Position);
-                        if (newCostG < neighbour.CostG || !openList.Contains(neighbour))
+                        // Calculate the neighbor node's g score
+                        float gScore = currentNode.CostG + Vector3.Distance(currentNode.Position, neighborNode.Position);
+
+                        // Check if the neighbor node is already in the open set
+                        if (!openSet.Contains(neighborNode))
                         {
-                            neighbour.CostG = newCostG;
-                            neighbour.UpdatePrevious(currentNode);
-                            if (!openList.Contains(neighbour))
-                            {
-                                openList.Add(neighbour);
-                            }
+                            // Add the neighbor node to the open set
+                            openSet.Add(neighborNode);
                         }
+                        else if (gScore >= neighborNode.CostG)
+                        {
+                            continue;
+                        }
+
+                        // Update the neighbor node's previous node and g score
+                        neighborNode.UpdatePrevious(currentNode);
                     }
                 }
             }
-            **/
+
+            // No path was found
             return null;
         }
+
     }
 }
