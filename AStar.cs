@@ -30,7 +30,7 @@ namespace EasyAI.Navigation
             {
                 AStarNode currentNode = nodeList.Where(node => node.IsOpen).OrderBy(node => node.CostF).First();
 
-                if (currentNode == endNode)
+                if (currentNode.Position == goal)
                 {
                     List<Vector3> path = new List<Vector3>();
                     AStarNode node = currentNode;
