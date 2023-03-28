@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using EasyAI.Navigation.Nodes;
 using UnityEngine;
+using System;
+using System.Linq;
 
 namespace EasyAI.Navigation
 {
@@ -19,30 +21,17 @@ namespace EasyAI.Navigation
         public static List<Vector3> Perform(Vector3 current, Vector3 goal, List<Connection> connections)
         {
 
-            // Create the start and end nodes
             AStarNode startNode = new AStarNode(current, goal);
             AStarNode endNode = new AStarNode(goal, goal);
 
-            // Create the open and closed sets
-            List<AStarNode> openSet = new List<AStarNode> { startNode };
-            HashSet<AStarNode> closedSet = new HashSet<AStarNode>();
+            List<AStarNode> nodeList = new List<AStarNode> { startNode };
 
-            while (openSet.Count > 0)
+            while (nodeList.Any(node => node.IsOpen))
             {
-                // Get the node with the lowest f cost
-                AStarNode currentNode = openSet[0];
-                for (int i = 1; i < openSet.Count; i++)
-                {
-                    if (openSet[i].CostF < currentNode.CostF)
-                    {
-                        currentNode = openSet[i];
-                    }
-                }
+                AStarNode currentNode = nodeList.Where(node => node.IsOpen).OrderBy(node => node.CostF).First();
 
-                // Check if we've reached the goal
                 if (currentNode == endNode)
                 {
-                    // Reconstruct the path and return it
                     List<Vector3> path = new List<Vector3>();
                     AStarNode node = currentNode;
                     while (node != startNode)
@@ -54,47 +43,40 @@ namespace EasyAI.Navigation
                     return path;
                 }
 
-                // Move the current node from the open set to the closed set
-                openSet.Remove(currentNode);
-                closedSet.Add(currentNode);
+                currentNode.IsOpen = false;
 
-                // Check each neighbor of the current node
+                if (connections == null)
+                {
+                    throw new ArgumentNullException(nameof(connections));
+                }
+
                 foreach (Connection connection in connections)
                 {
-                    // Check if the connection contains the current node
                     if (connection.A == currentNode.Position || connection.B == currentNode.Position)
                     {
-                        // Get the neighbor node
                         Vector3 neighborPosition = connection.A == currentNode.Position ? connection.B : connection.A;
-                        AStarNode neighborNode = new AStarNode(neighborPosition, goal, currentNode);
+                        AStarNode neighborNode = nodeList.FirstOrDefault(node => node.Position == neighborPosition);
 
-                        // Check if the neighbor node is already in the closed set
-                        if (closedSet.Contains(neighborNode))
+                        if (neighborNode == null)
+                        {
+                            neighborNode = new AStarNode(neighborPosition, goal, currentNode);
+                            nodeList.Add(neighborNode);
+                        }
+                        else if (!neighborNode.IsOpen)
                         {
                             continue;
                         }
 
-                        // Calculate the neighbor node's g score
                         float gScore = currentNode.CostG + Vector3.Distance(currentNode.Position, neighborNode.Position);
 
-                        // Check if the neighbor node is already in the open set
-                        if (!openSet.Contains(neighborNode))
+                        if (gScore < neighborNode.CostG)
                         {
-                            // Add the neighbor node to the open set
-                            openSet.Add(neighborNode);
+                            neighborNode.UpdatePrevious(currentNode);
                         }
-                        else if (gScore >= neighborNode.CostG)
-                        {
-                            continue;
-                        }
-
-                        // Update the neighbor node's previous node and g score
-                        neighborNode.UpdatePrevious(currentNode);
                     }
                 }
             }
 
-            // No path was found
             return null;
         }
 
